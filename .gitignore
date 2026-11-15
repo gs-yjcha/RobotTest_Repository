@@ -1,0 +1,41 @@
+# --- 로컬 전용 (MobED 연동 설정, 비공개 자료 참조) ---
+local/
+
+# --- 비밀유지 자료: 로봇 API 정의·문서·생성 코드 ---
+*.proto
+**/proto/
+**/generated/
+*.pdf
+*.zip
+
+# --- 인증·비밀 ---
+.env
+.env.*
+!.env.example
+*.crt
+*.key
+*.pem
+*.p12
+**/certs/
+
+# --- Node ---
+node_modules/
+dist/
+build/
+coverage/
+*.log
+.vite/
+playwright-report/
+test-results/
+
+# --- 에디터·OS ---
+.vscode/*
+!.vscode/extensions.json
+.vs/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- AI 도구 개인 설정 ---
+CLAUDE.local.md
+.claude/settings.local.json
