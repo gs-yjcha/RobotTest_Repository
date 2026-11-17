@@ -1,0 +1,112 @@
+﻿<Window x:Class="Tablet.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:Tablet.App.ViewModels"
+        Title="RobotTest Tablet" Width="1440" Height="960" MinWidth="1024" MinHeight="700"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource Bg}" FontFamily="Malgun Gothic" FontSize="15"
+        Foreground="{StaticResource Ink}"
+        Stylus.IsPressAndHoldEnabled="False"
+        Stylus.IsFlicksEnabled="False">
+    <!-- Stylus.IsPressAndHoldEnabled=False : 길게 누르기 → 우클릭 변환을 끈다 (누르는 동안 이동 버튼용, 기획안 v3 5장) -->
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="76"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- 상단 상태바 -->
+        <Border Background="{StaticResource Navy}" Padding="16,0">
+            <DockPanel LastChildFill="False">
+                <Button DockPanel.Dock="Right" Style="{StaticResource StopButton}" Content="■  전체 정지"
+                        Command="{Binding StopAllCommand}" VerticalAlignment="Center"/>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding RobotName}" Foreground="White" FontSize="18" FontWeight="Bold"
+                               VerticalAlignment="Center" Margin="0,0,16,0"/>
+                    <Border Style="{StaticResource Chip}">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="9" Height="9" Margin="0,0,7,0" VerticalAlignment="Center">
+                                <Ellipse.Style>
+                                    <Style TargetType="Ellipse">
+                                        <Setter Property="Fill" Value="{StaticResource Red}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding LinkText}" Value="연결">
+                                                <Setter Property="Fill" Value="{StaticResource Green}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding LinkText}" Value="연결 중">
+                                                <Setter Property="Fill" Value="{StaticResource Amber}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Ellipse.Style>
+                            </Ellipse>
+                            <TextBlock Foreground="#CBD5E1" Text="MobED "/>
+                            <TextBlock Foreground="White" FontWeight="Bold" Text="{Binding LinkText}"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Chip}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Foreground="#CBD5E1" Text="모드 "/>
+                            <TextBlock Foreground="White" FontWeight="Bold" Text="{Binding ModeText}"/>
+                        </StackPanel>
+                    </Border>
+                    <TextBlock Text="{Binding StopMessage}" Foreground="#FCA5A5" FontWeight="Bold"
+                               VerticalAlignment="Center" Margin="8,0,0,0"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="112"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- 왼쪽 메뉴 -->
+            <Border Background="{StaticResource Panel}" BorderBrush="{StaticResource Line}" BorderThickness="0,0,1,0">
+                <ItemsControl ItemsSource="{Binding Pages}" Margin="0,10,0,0">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:PageViewModel}">
+                            <Button Style="{StaticResource NavButton}"
+                                    Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    CommandParameter="{Binding}">
+                                <Border x:Name="Sel" CornerRadius="12" Width="92" Height="80">
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock x:Name="Ic" Text="{Binding Icon}" FontSize="24" HorizontalAlignment="Center"
+                                                   Foreground="{StaticResource Ink2}"/>
+                                        <TextBlock x:Name="Tx" Text="{Binding Title}" FontSize="14" HorizontalAlignment="Center"
+                                                   Margin="0,4,0,0" Foreground="{StaticResource Ink2}"/>
+                                    </StackPanel>
+                                </Border>
+                            </Button>
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                    <Setter TargetName="Sel" Property="Background" Value="{StaticResource Blue50}"/>
+                                    <Setter TargetName="Ic" Property="Foreground" Value="{StaticResource Blue}"/>
+                                    <Setter TargetName="Tx" Property="Foreground" Value="{StaticResource Blue}"/>
+                                    <Setter TargetName="Tx" Property="FontWeight" Value="Bold"/>
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Border>
+
+            <!-- 본문: 화면별 내용은 T3~T7에서 채운다 -->
+            <Border Grid.Column="1" Margin="16" Background="{StaticResource Panel}" CornerRadius="14"
+                    BorderBrush="{StaticResource Line}" BorderThickness="1">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" DataContext="{Binding CurrentPage}">
+                    <TextBlock Text="{Binding Title}" FontSize="32" FontWeight="Bold" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding Summary}" FontSize="17" Foreground="{StaticResource Ink2}"
+                               HorizontalAlignment="Center" Margin="0,12,0,0"/>
+                    <Border Background="{StaticResource Blue50}" CornerRadius="999" Padding="14,5"
+                            HorizontalAlignment="Center" Margin="0,16,0,0">
+                        <TextBlock Foreground="{StaticResource Blue}" FontWeight="Bold">
+                            <Run Text="구현 예정 단계 "/><Run Text="{Binding PlannedStep, Mode=OneWay}"/>
+                        </TextBlock>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>

@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>Tablet.App</RootNamespace>
+    <AssemblyName>RobotTest.Tablet</AssemblyName>
+  </PropertyGroup>
+
+  <!--
+    MobED 직접 연결 구현은 공개 저장소에 넣지 않는다 (proto·생성 코드 비밀유지).
+    platforms/transport/local/Mobed.Client 가 있으면 실기 모드(MOBED_DIRECT), 없으면 Mock 모드로 빌드한다.
+    local 프로젝트는 Tablet.Core를 참조하고 Mobed.Client.MobedClientFactory.Create() : IRobotClient 를 제공한다.
+  -->
+  <PropertyGroup>
+    <MobedClientProject>$(MSBuildThisFileDirectory)..\..\..\local\Mobed.Client\Mobed.Client.csproj</MobedClientProject>
+    <DefineConstants Condition="Exists('$(MobedClientProject)')">$(DefineConstants);MOBED_DIRECT</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tablet.Core\Tablet.Core.csproj" />
+    <ProjectReference Include="..\Tablet.Mock\Tablet.Mock.csproj" />
+    <ProjectReference Include="$(MobedClientProject)" Condition="Exists('$(MobedClientProject)')" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+
+</Project>
