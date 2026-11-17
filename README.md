@@ -7,7 +7,7 @@ MobED 기반 플랫폼별 개발 저장소다. 플랫폼마다 `platforms/` 아�
 
 | 플랫폼 | 폴더 | 상태 |
 |---|---|---|
-| 물품 이송 | [`platforms/transport`](https://github.com/gs-yjcha/RobotTest_Repository/tree/main/platforms/transport) | 기획안 v2, 태블릿 UI 시안 |
+| 물품 이송 | [`platforms/transport`](https://github.com/gs-yjcha/RobotTest_Repository/tree/main/platforms/transport) | 기획안 v3 (WPF 태블릿 → MobED 직접 연결), T1 진행 |
 | 드론 스테이션 | [`platforms/drone-station`](https://github.com/gs-yjcha/RobotTest_Repository/tree/main/platforms/drone-station) | 골격만 |
 | MOMA (MobED + 협동로봇) | [`platforms/moma`](https://github.com/gs-yjcha/RobotTest_Repository/tree/main/platforms/moma) | 골격만 |
 | 감시정찰 | [`platforms/surveillance`](https://github.com/gs-yjcha/RobotTest_Repository/tree/main/platforms/surveillance) | 골격만 |
