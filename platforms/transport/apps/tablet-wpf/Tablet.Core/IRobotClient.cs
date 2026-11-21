@@ -24,7 +24,7 @@ public enum RobotLinkState
 
 /// <summary>
 /// 화면이 로봇과 말하는 유일한 통로. 구현은 Mock → MobED 직접 → Agent 순서로 바꿔 끼운다.
-/// T1에서는 연결 표시와 전체 정지만 둔다. 작업·상태 스트림은 T2에서 늘린다.
+/// 주행을 지원하는 구현은 Navigation으로 작업 명령과 상태 스트림을 제공한다.
 /// </summary>
 public interface IRobotClient : IAsyncDisposable
 {
@@ -34,6 +34,9 @@ public interface IRobotClient : IAsyncDisposable
     RobotConnectionKind Kind { get; }
 
     RobotLinkState LinkState { get; }
+
+    /// <summary>주행 명령과 상태를 제공한다. 연결 전용 어댑터는 null을 반환한다.</summary>
+    IRobotNavigation? Navigation => null;
 
     event EventHandler<RobotLinkState>? LinkStateChanged;
 

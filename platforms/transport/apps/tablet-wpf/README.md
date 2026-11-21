@@ -5,7 +5,7 @@
 | 프로젝트 | 역할 |
 |---|---|
 | `Tablet.App` | WPF 화면 (MVVM, CommunityToolkit.Mvvm) |
-| `Tablet.Core` | 모델, `IRobotClient`, (T2~) Job 상태 머신 |
+| `Tablet.Core` | 모델, `IRobotClient`, Job 상태 머신 |
 | `Tablet.Mock` | Mock Robot — 실기 없이 화면 시험 |
 | `Tablet.Tests` | xUnit 단위 시험 |
 | `../../local/Mobed.Client` | MobED 직접 연결 구현. **git 제외** (있을 때만 빌드에 포함) |
@@ -27,6 +27,13 @@ dotnet run --project Tablet.App                 # 전체화면 (F11로 전환)
 
 - 창 전체에 `Stylus.IsPressAndHoldEnabled="False"` — 길게 누르기가 우클릭으로 바뀌지 않게 한다.
 - 누르는 동안 이동 버튼은 `TouchUp`·`LostTouchCapture`·창 `Deactivated`에서 반드시 정지한다 (T7).
+
+## T2 Job 상태 시험
+
+- `IRobotClient.Navigation`이 제공되면 `IRobotNavigation`으로 목적지 이동·일시정지·재개·취소를 요청하고, 단일 소비자가 Job ID별 주행 상태를 순서대로 받는다.
+- `JobStateMachine`은 로봇 도착 뒤 작업자 확인까지 받아야 작업을 완료한다. 해당 Job의 실패·취소는 종료 상태이며, 다른 Job의 수신 상태는 무시한다.
+- Mock은 시험에서 성공·실패를 직접 결정한다. 정지 요청에는 진행 중인 Mock 주행의 취소 상태를 발행한다.
+- 상태 시험은 `dotnet test Tablet.Tests/Tablet.Tests.csproj`로 실행한다. 운행 화면에 주행 명령을 연결하는 작업은 T5다.
 
 ## v10 화면 구성
 
