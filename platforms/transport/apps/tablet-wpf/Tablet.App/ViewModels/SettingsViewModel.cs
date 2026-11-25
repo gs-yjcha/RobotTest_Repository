@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Tablet.App.Settings;
+using Tablet.Core;
 using Tablet.Mock;
 
 namespace Tablet.App.ViewModels;
@@ -39,21 +40,25 @@ public sealed partial class SettingsViewModel : ObservableObject
     };
 
     private readonly ConnectionSettingsStore _store;
+    private readonly IRobotConnectionDiagnostics? _diagnostics;
     private byte[]? _protectedApiKey;
     private bool _keyAvailable;
 
-    internal SettingsViewModel(ConnectionSettingsStore store, bool isMock)
+    internal SettingsViewModel(
+        ConnectionSettingsStore store, bool isMock, IRobotConnectionDiagnostics? diagnostics = null)
     {
         _store = store;
+        _diagnostics = diagnostics;
         IsMock = isMock;
         Restore();
     }
 
     public bool IsMock { get; }
-    public string SaveButtonText => IsMock ? "저장 후 연결 시험" : "설정 저장";
+    public string SaveButtonText => IsMock || _diagnostics is not null ? "저장 후 연결 시험" : "설정 저장";
+
     public string TestScope => IsMock
         ? "Mock 시험입니다. 실제 MobED에는 연결하지 않습니다."
-        : "실기 연결 시험은 T4에서 지원합니다.";
+        : "MobED 직접 연결 시험에서 인증과 상태를 조회합니다.";
 
     public IReadOnlyList<ConnectionCheckStep> Steps { get; } =
     [
@@ -194,6 +199,8 @@ public sealed partial class SettingsViewModel : ObservableObject
             ResultMessage = "설정을 저장했습니다.";
             if (IsMock)
                 await RunMockTestAsync(endpoint, folder, file);
+            else if (_diagnostics is not null)
+                await RunDirectTestAsync(_diagnostics, endpoint, folder, file);
             return true;
         }
         finally
@@ -202,10 +209,59 @@ public sealed partial class SettingsViewModel : ObservableObject
         }
     }
 
+    private async Task RunDirectTestAsync(
+        IRobotConnectionDiagnostics diagnostics, string endpoint, string folder, string? file)
+    {
+        string? apiKey = null;
+        if (_keyAvailable && _protectedApiKey is not null)
+        {
+            try
+            {
+                apiKey = ConnectionSettingsStore.ReadKey(_protectedApiKey);
+            }
+            catch (CryptographicException)
+            {
+                _keyAvailable = false;
+                KeyPreview = "다시 등록 필요";
+            }
+        }
+
+        var settings = new RobotConnectionSettings(
+            ParseEndpoint(endpoint),
+            file is null ? null : Path.Combine(folder, file),
+            apiKey);
+        ResultMessage = "설정 저장 완료 · MobED 연결 시험 중";
+        Steps[0].SetResult(ConnectionCheckState.Checking, "확인 중");
+        var progress = new Progress<RobotConnectionCheck>(ApplyDirectResult);
+        try
+        {
+            if (await diagnostics.CheckAsync(settings, progress))
+                ResultMessage = "설정 저장 완료 · MobED 연결 시험 6단계 통과";
+        }
+        catch (Exception error) when (error is OperationCanceledException or ObjectDisposedException)
+        {
+            ResultMessage = "설정 저장 완료 · MobED 연결 시험 중단";
+        }
+    }
+
+    private void ApplyDirectResult(RobotConnectionCheck result)
+    {
+        var index = (int)result.Stage;
+        if (!result.Succeeded)
+        {
+            Fail(index, result.Detail, "MobED 연결 시험");
+            return;
+        }
+
+        Steps[index].SetResult(ConnectionCheckState.Passed, result.Detail);
+        if (index + 1 < Steps.Count)
+            Steps[index + 1].SetResult(ConnectionCheckState.Checking, "확인 중");
+    }
+
     private async Task RunMockTestAsync(string endpoint, string folder, string? file)
     {
         ResultMessage = "설정 저장 완료 · Mock 시험 중";
-        if (!IsValidEndpoint(endpoint))
+        if (ParseEndpoint(endpoint) is null)
         {
             Fail(0, "접속 주소와 포트를 확인해 주세요. 예: robot.example:443");
             return;
@@ -239,15 +295,15 @@ public sealed partial class SettingsViewModel : ObservableObject
         ResultMessage = "설정 저장 완료 · Mock 시험 6단계 통과";
     }
 
-    private void Fail(int index, string detail)
+    private void Fail(int index, string detail, string testName = "Mock 시험")
     {
         Steps[index].SetResult(ConnectionCheckState.Failed, detail);
         foreach (var step in Steps.Skip(index + 1))
             step.SetResult(ConnectionCheckState.Skipped, "건너뜀");
-        ResultMessage = $"설정 저장 완료 · Mock 시험 {index + 1}단계 실패";
+        ResultMessage = $"설정 저장 완료 · {testName} {index + 1}단계 실패";
     }
 
-    private static bool IsValidEndpoint(string endpoint)
+    private static Uri? ParseEndpoint(string endpoint)
     {
         var address = endpoint.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
             ? endpoint
@@ -261,6 +317,8 @@ public sealed partial class SettingsViewModel : ObservableObject
             && uri.HostNameType is UriHostNameType.Dns or UriHostNameType.IPv4 or UriHostNameType.IPv6
             && uri.UserInfo.Length == 0
             && uri.PathAndQuery == "/"
-            && uri.Fragment.Length == 0;
+            && uri.Fragment.Length == 0
+                ? uri
+                : null;
     }
 }

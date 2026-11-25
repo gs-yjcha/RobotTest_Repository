@@ -28,9 +28,14 @@ public sealed partial class ShellViewModel : ObservableObject
     {
         _robot = robot;
         _linkState = robot.LinkState;
-        Settings = new SettingsViewModel(ConnectionSettingsStore.ForCurrentUser(), IsMock);
+        Settings = new SettingsViewModel(
+            ConnectionSettingsStore.ForCurrentUser(), IsMock, robot as IRobotConnectionDiagnostics);
         _robot.LinkStateChanged += (_, state) =>
-            Application.Current?.Dispatcher.Invoke(() => LinkState = state);
+        {
+            var dispatcher = Application.Current?.Dispatcher;
+            if (dispatcher is not null && !dispatcher.HasShutdownStarted)
+                dispatcher.InvokeAsync(() => LinkState = state);
+        };
         Pages = new()
         {
             new("operate", "운행", "⌁"), new("map", "맵 편집", "▦"),
@@ -55,7 +60,7 @@ public sealed partial class ShellViewModel : ObservableObject
     public string ModeText => _robot.Kind switch
     {
         RobotConnectionKind.Mock => "Mock · 화면 시험",
-        RobotConnectionKind.MobedDirect => "MobED 직접 연결",
+        RobotConnectionKind.MobedDirect => "MobED 직접 연결 · 상태 조회",
         RobotConnectionKind.Agent => "Agent 경유",
         _ => "연결 방식 미확인",
     };
@@ -102,7 +107,10 @@ public sealed partial class ShellViewModel : ObservableObject
 
     [RelayCommand] private void OpenSettings() => Navigate(Pages.Single(p => p.Key == "settings"));
 
-    [RelayCommand]
+    private bool CanRequestStop() =>
+        _robot.Kind != RobotConnectionKind.MobedDirect || _robot.Navigation is not null;
+
+    [RelayCommand(CanExecute = nameof(CanRequestStop))]
     private async Task StopAllAsync()
     {
         try

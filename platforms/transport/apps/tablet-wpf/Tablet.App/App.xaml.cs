@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using Tablet.App.ViewModels;
 using Tablet.Core;
 using Tablet.Mock;
@@ -25,7 +25,8 @@ public partial class App : Application
         MainWindow = window;
         window.Show();
 
-        await shell.StartAsync();
+        if (shell.IsMock)
+            await shell.StartAsync();
     }
 
     protected override async void OnExit(ExitEventArgs e)

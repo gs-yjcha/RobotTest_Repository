@@ -75,12 +75,14 @@ internal sealed class ConnectionSettingsStore(string path)
         }
     }
 
-    public static string GetKeyPreview(byte[] protectedKey)
+    public static string GetKeyPreview(byte[] protectedKey) => MaskKey(ReadKey(protectedKey));
+
+    public static string ReadKey(byte[] protectedKey)
     {
         var bytes = ProtectedData.Unprotect(protectedKey, optionalEntropy: null, DataProtectionScope.CurrentUser);
         try
         {
-            return MaskKey(Encoding.UTF8.GetString(bytes));
+            return Encoding.UTF8.GetString(bytes);
         }
         finally
         {
