@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Tablet.App.Settings;
 using Tablet.Core;
 
 namespace Tablet.App.ViewModels;
@@ -27,6 +28,7 @@ public sealed partial class ShellViewModel : ObservableObject
     {
         _robot = robot;
         _linkState = robot.LinkState;
+        Settings = new SettingsViewModel(ConnectionSettingsStore.ForCurrentUser(), IsMock);
         _robot.LinkStateChanged += (_, state) =>
             Application.Current?.Dispatcher.Invoke(() => LinkState = state);
         Pages = new()
@@ -47,6 +49,7 @@ public sealed partial class ShellViewModel : ObservableObject
     public ObservableCollection<PageViewModel> Pages { get; }
     public ObservableCollection<DestinationPreview> Destinations { get; }
     public ObservableCollection<UiLogEntry> Logs { get; } = new();
+    public SettingsViewModel Settings { get; }
     public string RobotName => _robot.RobotName;
     public bool IsMock => _robot.Kind == RobotConnectionKind.Mock;
     public string ModeText => _robot.Kind switch
@@ -82,8 +85,6 @@ public sealed partial class ShellViewModel : ObservableObject
     [ObservableProperty] private int _operateTab;
     [ObservableProperty] private int _driveModeIndex;
     [ObservableProperty] private int _speed = 1;
-    [ObservableProperty] private string _endpoint = "";
-    [ObservableProperty] private string _certificateFolder = "";
 
     public int[] SpeedOptions => DriveModeIndex == 0 ? [1, 2, 3] : [1, 2, 3, 4, 5];
     partial void OnDriveModeIndexChanged(int value)

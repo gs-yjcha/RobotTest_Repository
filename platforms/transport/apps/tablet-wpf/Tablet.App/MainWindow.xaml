@@ -10,7 +10,7 @@
   <DataTemplate x:Key="Operate"><views:OperateView/></DataTemplate>
   <DataTemplate x:Key="Map"><views:MapEditView/></DataTemplate>
   <DataTemplate x:Key="Log"><views:LogView/></DataTemplate>
-  <DataTemplate x:Key="Settings"><views:SettingsView/></DataTemplate>
+  <DataTemplate x:Key="Settings"><views:SettingsView DataContext="{Binding Settings}"/></DataTemplate>
  </Window.Resources>
  <Grid>
   <Grid.RowDefinitions><RowDefinition Height="80"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
